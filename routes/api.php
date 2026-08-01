@@ -1,5 +1,10 @@
 <?php
 
+
+use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\KomikController;
+use App\Http\Controllers\AnggotaController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,3 +17,7 @@ Route::get('/test', function(){
         'message' => 'API is working'
     ]);
 });
+
+Route::apiResource('kategori', KategoriController::class);
+Route::apiResource('komiks', KomikController::class);
+Route::apiResource('anggota', AnggotaController::class);
