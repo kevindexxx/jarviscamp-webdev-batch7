@@ -17,4 +17,12 @@ class Komik extends Model
         'status',
         'file_pdf',
     ];
+
+    public function kategori(){
+        return $this->belongsTo(Kategori::class);
+    }
+
+    public function peminjaman(){
+        return $this->hasMany(Peminjaman::class);
+    }
 }
