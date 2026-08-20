@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\KomikController;
 use App\Http\Controllers\AnggotaController;
@@ -24,3 +25,10 @@ Route::apiResource('kategori', KategoriController::class);
 Route::apiResource('komiks', KomikController::class);
 Route::apiResource('anggota', AnggotaController::class);
 Route::post('/peminjaman', [PeminjamanController::class, 'store']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('kategori', KategoriController::class);
+    Route::apiResource('komiks', KomikController::class);
+    Route::post('/peminjaman', [PeminjamanController::class, 'store']);
+});
