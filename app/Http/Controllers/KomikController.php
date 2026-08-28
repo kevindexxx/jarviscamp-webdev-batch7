@@ -5,47 +5,59 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreKomikRequest;
 use App\Http\Requests\UpdateKomikRequest;
 use App\Http\Resources\KomikResource;
-use App\Models\Komik;
+use App\Services\KomikService;
+use App\Traits\ApiResponse;
 
 class KomikController extends Controller
 {
+    use ApiResponse;
+
+    public function __construct(protected KomikService $komikService) {}
+
     public function index()
     {
-        return KomikResource::collection(Komik::all());
-    }
-
-    public function show(string $id)
-    {
-        return new KomikResource(Komik::findOrFail($id));
+        $komiks = $this->komikService->index();
+        return $this->success(
+            KomikResource::collection($komiks),
+            'Daftar komik berhasil diambil.'
+        );
     }
 
     public function store(StoreKomikRequest $request)
     {
-        $komik = Komik::create($request->validated());
+        $data = $request->safe()->except('file_pdf');
 
-        return response()->json([
-            'message' => 'Komik berhasil ditambahkan',
-            'data' => new KomikResource($komik),
-        ], 201);
+        if ($request->hasFile('file_pdf')) {
+            $data['file_pdf'] = $request->file('file_pdf')->store('komiks', 'public');
+        }
+
+        $komik = $this->komikService->store($data);
+
+        return $this->success(new KomikResource($komik), 'Komik berhasil ditambahkan.', 201);
+    }
+
+    public function show(string $id)
+    {
+        $komik = $this->komikService->show($id);
+        return $this->success(new KomikResource($komik), 'Detail komik berhasil diambil.');
     }
 
     public function update(UpdateKomikRequest $request, string $id)
     {
-        $komik = Komik::findOrFail($id);
-        $komik->update($request->validated());
+        $data = $request->safe()->except('file_pdf');
 
-        return response()->json([
-            'message' => 'Komik berhasil diupdate',
-            'data' => new KomikResource($komik),
-        ]);
+        if ($request->hasFile('file_pdf')) {
+            $data['file_pdf'] = $request->file('file_pdf')->store('komiks', 'public');
+        }
+
+        $komik = $this->komikService->update($id, $data);
+
+        return $this->success(new KomikResource($komik), 'Komik berhasil diperbarui.');
     }
 
     public function destroy(string $id)
     {
-        Komik::findOrFail($id)->delete();
-
-        return response()->json([
-            'message' => 'Komik berhasil dihapus',
-        ]);
+        $this->komikService->destroy($id);
+        return $this->success(null, 'Komik berhasil dihapus.');
     }
 }

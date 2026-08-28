@@ -1,51 +1,48 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAnggotaRequest;
 use App\Http\Requests\UpdateAnggotaRequest;
 use App\Http\Resources\AnggotaResource;
-use App\Models\Anggota;
+use App\Services\AnggotaService;
+use App\Traits\ApiResponse;
 
 class AnggotaController extends Controller
 {
+    use ApiResponse;
+
+    public function __construct(protected AnggotaService $anggotaService) {}
+
     public function index()
     {
-        return AnggotaResource::collection(Anggota::all());
-    }
-
-    public function show(string $id)
-    {
-        return new AnggotaResource(Anggota::findOrFail($id));
+        $anggota = $this->anggotaService->index();
+        return $this->success(
+            AnggotaResource::collection($anggota),
+            'Daftar anggota berhasil diambil.'
+        );
     }
 
     public function store(StoreAnggotaRequest $request)
     {
-        $anggota = Anggota::create($request->validated());
+        $anggota = $this->anggotaService->store($request->validated());
+        return $this->success(new AnggotaResource($anggota), 'Anggota berhasil ditambahkan.', 201);
+    }
 
-        return response()->json([
-            'message' => 'Anggota berhasil ditambahkan',
-            'data' => new AnggotaResource($anggota),
-        ], 201);
+    public function show(string $id)
+    {
+        $anggota = $this->anggotaService->show($id);
+        return $this->success(new AnggotaResource($anggota), 'Detail anggota berhasil diambil.');
     }
 
     public function update(UpdateAnggotaRequest $request, string $id)
     {
-        $anggota = Anggota::findOrFail($id);
-        $anggota->update($request->validated());
-
-        return response()->json([
-            'message' => 'Anggota berhasil diupdate',
-            'data' => new AnggotaResource($anggota),
-        ]);
+        $anggota = $this->anggotaService->update($id, $request->validated());
+        return $this->success(new AnggotaResource($anggota), 'Anggota berhasil diperbarui.');
     }
 
     public function destroy(string $id)
     {
-        Anggota::findOrFail($id)->delete();
-
-        return response()->json([
-            'message' => 'Anggota berhasil dihapus',
-        ]);
+        $this->anggotaService->destroy($id);
+        return $this->success(null, 'Anggota berhasil dihapus.');
     }
 }
