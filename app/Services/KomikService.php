@@ -9,12 +9,12 @@ class KomikService
 {
     public function index(): Collection
     {
-        return Komik::with('kategori')->get(); 
+        return Komik::with('kategori')->get();
     }
 
     public function store(array $data): Komik
     {
-        return Komik::create($data)->refresh()->load('kategori');
+        return Komik::create($data);
     }
 
     public function show(int|string $id): Komik
@@ -26,8 +26,8 @@ class KomikService
     {
         $komik = Komik::findOrFail($id);
         $komik->update($data);
-        return $komik->fresh('kategori');
-
+        return $komik->fresh();
+    }
 
     public function destroy(int|string $id): void
     {
