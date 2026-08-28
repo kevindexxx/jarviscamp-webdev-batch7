@@ -5,40 +5,42 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse; 
 
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
 
-
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Email atau password salah.'],
-            ]);
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return $this->errorResponse('Email atau password salah.', 401);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
 
-        return $this->success([
-            'user' => $user->only(['id', 'name', 'email']),
-            'token' => $token,
+        $user = User::where('email', $request->email)->firstOrFail();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return $this->successResponse([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
         ], 'Login berhasil.');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
+
         $request->user()->currentAccessToken()->delete();
-        return $this->success(null, 'Logout berhasil.');
+
+        return $this->successResponse(null, 'Logout berhasil.');
     }
 }
